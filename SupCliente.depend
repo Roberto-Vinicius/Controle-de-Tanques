@@ -1,0 +1,49 @@
+# depslib dependency file v1.0
+1737840029 source:c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\mysocket.cpp
+	"mysocket.h"
+	<sys/types.h>
+	<netdb.h>
+	<unistd.h>
+
+1737840030 c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\mysocket.h
+	<string>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/socket.h>
+
+1737842193 source:c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supcliente.cpp
+	<iostream>
+	"supcliente.h"
+	<thread>
+	<chrono>
+
+1737840562 c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supcliente.h
+	<string>
+	<ctime>
+	"supdados.h"
+	<thread>
+	<mutex>
+	"mysocket.h"
+
+1737828623 c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supdados.h
+
+1737828623 source:c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supcliente_main_term.cpp
+	"supcliente_term.h"
+
+1737828623 c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supcliente_term.h
+	"supcliente.h"
+
+1737828623 source:c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supcliente_term.cpp
+	<iostream>
+	<cmath>
+	"supcliente_term.h"
+
+1737828623 source:c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\supdados.cpp
+	<iostream>
+	<iomanip>
+	<string>
+	"tanques-param.h"
+	"supdados.h"
+
+1737828624 c:\users\roberto vinicius\downloads\suptanques_incompleto\suptanques\tanques-param.h
+

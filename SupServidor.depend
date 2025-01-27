@@ -1,0 +1,55 @@
+# depslib dependency file v1.0
+1737840029 source:c:\users\roberto vinicius\downloads\suptanques\mysocket.cpp
+	"mysocket.h"
+	<sys/types.h>
+	<netdb.h>
+	<unistd.h>
+
+1737840030 c:\users\roberto vinicius\downloads\suptanques\mysocket.h
+	<string>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/socket.h>
+
+1737828623 source:c:\users\roberto vinicius\downloads\suptanques\supdados.cpp
+	<iostream>
+	<iomanip>
+	<string>
+	"tanques-param.h"
+	"supdados.h"
+
+1737828624 c:\users\roberto vinicius\downloads\suptanques\tanques-param.h
+
+1737828623 c:\users\roberto vinicius\downloads\suptanques\supdados.h
+
+1737846125 source:c:\users\roberto vinicius\downloads\suptanques\supservidor.cpp
+	<iostream>
+	<algorithm>
+	"supservidor.h"
+
+1737844549 c:\users\roberto vinicius\downloads\suptanques\supservidor.h
+	<string>
+	<list>
+	<mutex>
+	"tanques.h"
+	"supdados.h"
+	"mysocket.h"
+
+1737828624 c:\users\roberto vinicius\downloads\suptanques\tanques.h
+	<ctime>
+	<thread>
+	<mutex>
+	"tanques-param.h"
+
+1737828623 source:c:\users\roberto vinicius\downloads\suptanques\supservidor_main.cpp
+	<iostream>
+	<cmath>
+	"supservidor.h"
+
+1737854865 source:c:\users\roberto vinicius\downloads\suptanques\tanques.cpp
+	<iostream>
+	<cmath>
+	<chrono>
+	"tanques.h"
+	"supdados.h"
+
