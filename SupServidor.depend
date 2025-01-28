@@ -53,3 +53,108 @@
 	"tanques.h"
 	"supdados.h"
 
+1738015207 source:c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\mysocket.cpp
+	"mysocket.h"
+	<sys/types.h>
+	<netdb.h>
+	<unistd.h>
+
+1738015207 c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\mysocket.h
+	<string>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/socket.h>
+
+1738015208 source:c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\supdados.cpp
+	<iostream>
+	<iomanip>
+	<string>
+	"tanques-param.h"
+	"supdados.h"
+
+1738015209 c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\tanques-param.h
+
+1738015208 c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\supdados.h
+
+1738015209 source:c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\supservidor_main.cpp
+	<iostream>
+	<cmath>
+	"supservidor.h"
+
+1738015209 c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\supservidor.h
+	<string>
+	<list>
+	<mutex>
+	"tanques.h"
+	"supdados.h"
+	"mysocket.h"
+
+1738015209 c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\tanques.h
+	<ctime>
+	<thread>
+	<mutex>
+	"tanques-param.h"
+
+1738015209 source:c:\users\roberto vinicius\downloads\supervisor-de-tanques\supervisor-de-tanques-main\tanques.cpp
+	<iostream>
+	<cmath>
+	<chrono>
+	"tanques.h"
+	"supdados.h"
+
+1738015207 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\mysocket.cpp
+	"mysocket.h"
+	<sys/types.h>
+	<netdb.h>
+	<unistd.h>
+
+1738015207 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\mysocket.h
+	<string>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/socket.h>
+
+1738015208 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supdados.cpp
+	<iostream>
+	<iomanip>
+	<string>
+	"tanques-param.h"
+	"supdados.h"
+
+1738015209 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\tanques-param.h
+
+1738015208 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supdados.h
+
+1738021934 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor.cpp
+	<iostream>
+	<algorithm>
+	"supservidor.h"
+
+1738022112 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor.h
+	<string>
+	<list>
+	<mutex>
+	"tanques.h"
+	"supdados.h"
+	"mysocket.h"
+	<queue>
+	<condition_variable>
+
+1738015209 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\tanques.h
+	<ctime>
+	<thread>
+	<mutex>
+	"tanques-param.h"
+
+1738015209 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor_main.cpp
+	<iostream>
+	<cmath>
+	"supservidor.h"
+
+1738015209 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\tanques.cpp
+	<iostream>
+	<cmath>
+	<chrono>
+	"tanques.h"
+	"supdados.h"
+

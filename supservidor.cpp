@@ -185,6 +185,7 @@ bool SupServidor::addUser(const string& Login, const string& Senha,
     return true;
 }
 
+
 /// Remover um usuario
 bool SupServidor::removeUser(const string& Login)
 {
@@ -266,6 +267,8 @@ void SupServidor::thr_server_main(void)
                         uint16_t cmd;
                         if (U.socket.read_uint16(cmd) != mysocket_status::SOCK_OK)
                         {
+                            // Exibe mensagem de desconexão
+                            std::cout << U.login << ": Desconectado" << std::endl; // Nova linha adicionada
                             U.close(); // Fecha o socket do cliente com erro
                             continue;
                         }
@@ -302,6 +305,10 @@ void SupServidor::thr_server_main(void)
                         {
                             // Se deu tudo certo, faz o socket temporário ser o novo socket do cliente
                             itr->socket = std::move(temp_socket);
+
+                            // Exibe mensagem de conexão
+                            std::cout << login << ": Conectado" << std::endl; // Nova linha adicionada
+
                             uint16_t response = CMD_OK; // Resposta de sucesso
                             itr->socket.write_uint16(response);
                         }
