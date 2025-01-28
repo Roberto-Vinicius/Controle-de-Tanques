@@ -22,7 +22,7 @@ private:
         bool isAdmin;         // Pode alterar (true) ou soh consultar (false) o sistema
         // Socket de comunicacao
         /*ACRESCENTEI*/
-        tcp_mysocket socket;     // Socket de comunicação
+        tcp_mysocket socket;     // Socket de comunicaï¿½ï¿½o
         // Construtor default
         User(const std::string& Login, const std::string& Senha, bool Admin)
             :login(Login)
@@ -88,11 +88,17 @@ private:
     std::list<User> LU;
     // Identificador da thread do servidor
     /*ACRESCENTADO*/
-    std::thread thr_server;
-    std::mutex mtx;
+    std::thread thr_server;           // Thread principal do servidor
+    std::thread thr_sensor_monitor;   // Thread para monitorar o estado dos tanques
+    std::mutex mtx;                   // Mutex para proteger recursos compartilhados
+    bool monitor_running;             // Indica se a thread de monitoramento estÃ¡ ativa
+   
     // Socket de conexoes
     /*ACRESCENTADO*/
     tcp_mysocket_server socket_server;
+
+    // Estado do tanque
+    SupState estadoTanques;
 
     // Leitura do estado dos tanques a partir dos sensores
     void readStateFromSensors(SupState& S) const;
