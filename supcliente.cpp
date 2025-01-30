@@ -298,10 +298,10 @@ void SupCliente::setValvOpen(bool isV1, bool Open)
 /// Fixa a entrada da bomba: 0 a 65535
 void SupCliente::setPumpInput(uint16_t Input)
 {
-    // Comando recebido
-    uint16_t cmd;
-    // Msg de erro para debug
-    std::string msg_err;
+    // Variáveis auxiliares
+    uint16_t respostaServidor;
+    std::string mensagemErro;
+    mysocket_status statusComunicacao;
 
     // Bloqueia o mutex para garantir exclusao mutua no envio pelo socket
     // de comandos que ficam aguardando resposta, para evitar que a resposta
@@ -318,42 +318,45 @@ void SupCliente::setPumpInput(uint16_t Input)
         // Escreve o comando CMD_SET_PUMP
         // Em caso de erro, throw 302
         /* ACRESCENTEI */
-        if (sock.write_uint16(cmd) != mysocket_status::SOCK_OK)
+        // Envia comando para configurar a bomba
+        statusComunicacao = sock.write_uint16(CMD_SET_PUMP);
+        if (statusComunicacao != mysocket_status::SOCK_OK)
         {
-            throw 302; // Erro ao enviar comando de configuração da bomba
+            throw 302; // Falha ao enviar o comando
         }
 
         // Escreve o paramentro do comando CMD_SET_PUMP (Input = 0 a 65535)
         // Em caso de erro, throw 303
         /* ACRESCENTEI */
-        if (sock.write_uint16(Input) != mysocket_status::SOCK_OK)
+        statusComunicacao = sock.write_uint16(Input);
+        if (statusComunicacao != mysocket_status::SOCK_OK)
         {
-            throw 303; // Erro ao enviar o valor de entrada da bomba
+            throw 303; // Falha ao enviar o valor da bomba
         }
 
         // Leh a resposta do servidor ao comando
         // Em caso de erro, throw 304
         /* ACRESCENTAR */
-        uint16_t response;
-        if (sock.read_uint16(response) != mysocket_status::SOCK_OK)
+        statusComunicacao = sock.read_uint16(respostaServidor);
+        if (statusComunicacao != mysocket_status::SOCK_OK)
         {
             throw 304; // Erro ao receber resposta do servidor
         }
         // Se resposta nao for CMD_OK, throw 305
-        if (response != CMD_OK)
+        if (respostaServidor != CMD_OK)
         {
-            throw 305; // Resposta inesperada do servidor
+            throw 305; // Resposta inesperada
         }
     }
     catch (int err)
     {
         // Libera o mutex para sair da zona de exclusao mutua.
         /* ACRESCENTAR */
+        mtx.unlock();
 
         // Msg de erro para debug
-        msg_err = "Erro na atuacao sobre a bomba: " + std::to_string(err);
-        virtExibirErro(msg_err);
-
+        mensagemErro = "Erro ao ajustar a bomba: " + std::to_string(err);
+        virtExibirErro(mensagemErro);
         // Desconecta do servidor (reexibe a interface desconectada)
         desconectar();
     }
@@ -362,6 +365,7 @@ void SupCliente::setPumpInput(uint16_t Input)
     /* ACRESCENTEI */
     // O mutex é liberado automaticamente ao sair do escopo
     // devido ao uso de std::lock_guard, não é necessário liberar manualmente.
+    mtx.unlock();
 
     // Nao reexibe a interface com novo estado.
     // Serah reexibida quando chegar o proximo dado do servidor, que
@@ -400,6 +404,10 @@ void SupCliente::main_thread(void)
     uint16_t cmd;
     // Estado recebido
     SupState S;
+    mysocket_status resultadoMainThread;
+
+    // Define the timeout in milliseconds
+    const int timeout_ms = 5000; // Adjust the timeout value as needed
 
     while (!encerrarCliente && isConnected())
     {
@@ -415,24 +423,19 @@ void SupCliente::main_thread(void)
             // Escreve o comando CMD_GET_DATA
             // Em caso de erro, throw 401
             /* ACRESCENTADO */
-            if (sock.write_uint16(cmd) != mysocket_status::SOCK_OK)
-            {
-                throw 401; // Erro ao enviar comando
-            }
+            // Solicita dados ao servidor
+            resultadoMainThread = sock.write_uint16(CMD_GET_DATA);
+            if (resultadoMainThread != mysocket_status::SOCK_OK)
+                throw 401;
 
             // Leh a resposta do servidor ao pedido de dados (com timeout)
             // Em caso de erro, throw 402
             /* ACRESCENTADO */
-            uint16_t response;
-
-            // Define o timeout (em segundos ou milissegundos, dependendo da implementação)
-            int timeout_ms = 5000; // Exemplo: timeout de 5000ms (5 segundos)
-
-            // Leitura com timeout
-            if (sock.read_uint16(response, timeout_ms) != mysocket_status::SOCK_OK) // Certifique-se de que `read_uint16` aceita timeout
+            resultadoMainThread = sock.read_uint16(cmd, timeout_ms);
+            if (resultadoMainThread != mysocket_status::SOCK_OK)
             {
-                std::cerr << "Erro: Tempo limite excedido ao esperar pela resposta do servidor para CMD_GET_DATA." << std::endl;
-                throw 402; // Código de erro mantido
+                std::cerr << "Erro: Tempo limite excedido ao aguardar resposta do servidor para CMD_GET_DATA." << std::endl;
+                throw 402;
             }
             // Se resposta nao for CMD_OK, throw 403
             if (cmd != CMD_DATA)
@@ -443,10 +446,11 @@ void SupCliente::main_thread(void)
             // Leh os dados (com timeout)
             // Em caso de erro, throw 404
             /* ACRESCENTADO */
-            if (sock.read_bytes(reinterpret_cast<mybyte *>(&S), sizeof(S), timeout_ms) != mysocket_status::SOCK_OK) // Supondo que read_bytes suporta timeout
+            resultadoMainThread = sock.read_bytes(reinterpret_cast<uint8_t *>(&S), sizeof(S), timeout_ms);
+            if (resultadoMainThread != mysocket_status::SOCK_OK)
             {
                 std::cerr << "Erro: Tempo limite excedido ao receber os dados do servidor." << std::endl;
-                throw 404; // Código de erro mantido
+                throw 404;
             }
 
             // Libera o mutex para sair da zona de exclusao mutua
@@ -461,7 +465,7 @@ void SupCliente::main_thread(void)
 
             // Espera "timeRefresh" segundos
             /* ACRESCENTADO */
-            std::this_thread::sleep_for(std::chrono::milliseconds(timeRefresh * 10));
+            std::this_thread::sleep_for(std::chrono::seconds(timeRefresh));
         }
         catch (int err)
         {
