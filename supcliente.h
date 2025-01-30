@@ -51,7 +51,8 @@ protected:
     // Espera pelo fim da thread de solicitacao de dados
     void join_if_joinable()
     {
-        /* ACRESCENTEI */if (thr.joinable())
+        /* ACRESCENTEI */
+        if (thr.joinable())
         {
             thr.join();
         }

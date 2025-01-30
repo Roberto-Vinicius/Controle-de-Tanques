@@ -130,15 +130,14 @@
 	<algorithm>
 	"supservidor.h"
 
-1738022112 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor.h
+1738186774 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor.h
 	<string>
 	<list>
 	<mutex>
+	<thread>
 	"tanques.h"
 	"supdados.h"
 	"mysocket.h"
-	<queue>
-	<condition_variable>
 
 1738015209 c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\tanques.h
 	<ctime>
@@ -146,7 +145,7 @@
 	<mutex>
 	"tanques-param.h"
 
-1738015209 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor_main.cpp
+1738022864 source:c:\users\roberto vinicius\downloads\roberto\supervisor-de-tanques-main\supservidor_main.cpp
 	<iostream>
 	<cmath>
 	"supservidor.h"

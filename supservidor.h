@@ -5,12 +5,13 @@
 #include <string>
 #include <list>
 #include <mutex>
+#include <thread>
 #include "tanques.h"
 #include "supdados.h"
 #include "mysocket.h"
 
 /// A classe que implementa o servidor do sistema de tanques
-class SupServidor: public Tanks
+class SupServidor : public Tanks
 {
 private:
     // Subclasse privada para representar os usuarios cadastrados no servidor
@@ -22,28 +23,31 @@ private:
         bool isAdmin;         // Pode alterar (true) ou soh consultar (false) o sistema
         // Socket de comunicacao
         /*ACRESCENTEI*/
-        tcp_mysocket socket;     // Socket de comunica��o
+        tcp_mysocket socket; // Socket de comunica��o
         // Construtor default
-        User(const std::string& Login, const std::string& Senha, bool Admin)
-            :login(Login)
-            ,password(Senha)
-            ,isAdmin(Admin)
-             /*ACRESCENTEI*/
-            , socket() {}
-        // Comparacao com string (testa se a string eh igual ao login)
-        bool operator==(const std::string& S) const
+        User(const std::string &Login, const std::string &Senha, bool Admin)
+            : login(Login), password(Senha), isAdmin(Admin)
+              /*ACRESCENTEI*/
+              ,
+              socket()
         {
-            return login==S;
+        }
+        // Comparacao com string (testa se a string eh igual ao login)
+        bool operator==(const std::string &S) const
+        {
+            return login == S;
         }
         // Usuario estah conectado ou nao?
         inline bool isConnected() const
         {
-            return /*MODIFICADO*/socket.connected();;
+            return /*MODIFICADO*/ socket.connected();
+            ;
         }
         // Desconecta usuario
         inline void close()
         {
-            /*ACRESCENTEI*/socket.close();;
+            /*ACRESCENTEI*/ socket.close();
+            ;
         }
     };
 
@@ -61,8 +65,8 @@ public:
     }
 
     // Funcoes de atuacao
-    bool setServerOn();                // Liga o servidor: retorna true se OK
-    void setServerOff();               // Desliga o servidor
+    bool setServerOn();  // Liga o servidor: retorna true se OK
+    void setServerOff(); // Desliga o servidor
 
     // Leitura e impressao em console do estado da planta
     void readPrintState() const;
@@ -70,16 +74,16 @@ public:
     void printUsers() const;
 
     // Adicionar um novo usuario
-    bool addUser(const std::string& Login, const std::string& Senha, bool Admin);
+    bool addUser(const std::string &Login, const std::string &Senha, bool Admin);
     // Remover um usuario
-    bool removeUser(const std::string& Login);
+    bool removeUser(const std::string &Login);
 
 private:
     // Construtores e operadores de atribuicao suprimidos (nao existem na classe)
-    SupServidor(const SupServidor& other) = delete;
-    SupServidor(SupServidor&& other) = delete;
-    SupServidor& operator=(const SupServidor& other) = delete;
-    SupServidor& operator=(SupServidor&& other) = delete;
+    SupServidor(const SupServidor &other) = delete;
+    SupServidor(SupServidor &&other) = delete;
+    SupServidor &operator=(const SupServidor &other) = delete;
+    SupServidor &operator=(SupServidor &&other) = delete;
 
     // Estado do servidor como um todo (ligado/desligado)
     bool server_on;
@@ -88,20 +92,18 @@ private:
     std::list<User> LU;
     // Identificador da thread do servidor
     /*ACRESCENTADO*/
-    std::thread thr_server;           // Thread principal do servidor
-    std::thread thr_sensor_monitor;   // Thread para monitorar o estado dos tanques
-    std::mutex mtx;                   // Mutex para proteger recursos compartilhados
-    bool monitor_running;             // Indica se a thread de monitoramento está ativa
-   
+    std::thread thr_server; // Thread principal do servidor
+    std::mutex mtx;         // Mutex para proteger recursos compartilhados
+
     // Socket de conexoes
     /*ACRESCENTADO*/
     tcp_mysocket_server socket_server;
 
-    // Estado do tanque
-    SupState estadoTanques;
+    // Apelido do iterador
+    typedef std::list<User>::iterator iteradorUser;
 
     // Leitura do estado dos tanques a partir dos sensores
-    void readStateFromSensors(SupState& S) const;
+    void readStateFromSensors(SupState &S) const;
 
     // A funcao que implementa a thread do servidor
     // Leitura e envio de dados pelos sockets

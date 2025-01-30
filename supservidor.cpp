@@ -10,11 +10,10 @@ using namespace std;
 
 /// Construtor
 SupServidor::SupServidor()
-    : Tanks()
-    , server_on(false)
-    , LU()
+    : Tanks(), server_on(false), LU()
       /*ACRESCENTADO*/
-    , socket_server()
+      ,
+      socket_server()
 {
     // Inicializa a biblioteca de sockets
     /*ACRESCENTEI*/
@@ -213,175 +212,165 @@ bool SupServidor::removeUser(const string &Login)
 /// Comunicacao com os clientes atraves dos sockets.
 void SupServidor::thr_server_main(void)
 {
-    // Fila de sockets para aguardar chegada de dados
-    mysocket_queue queue;
+    mysocket_queue fila;
+    mysocket_status resultado;
+    tcp_mysocket socket_temp;
+    iteradorUser iterUser;
+    SupState estadoTanque;
+    uint16_t comando, Open, Input;
+    string login, password;
 
     while (server_on)
     {
         try
         {
-            // Verifica se o socket principal do servidor foi fechado, lançando uma exceção se for o caso
-            if (socket_server.closed())
+            if (!socket_server.accepting())
             {
-                throw "socket de conexoes fechados";
+                throw "socket de conexoes fechado";
             }
 
-            // Limpa a fila de sockets antes de incluir novos sockets para monitoramento
-            queue.clear();
-            // Inclui o socket principal do servidor na fila para monitorar novas conexões
-            queue.include(socket_server);
-            // Itera sobre todos os usuários conectados e inclui os sockets deles na fila se estiverem conectados
+            fila.clear();
+            fila.include(socket_server);
             for (auto &U : LU)
             {
                 if (U.isConnected())
-                {
-                    queue.include(U.socket);
-                }
+                    fila.include(U.socket);
             }
 
-            // Espera até 1 segundo para detectar atividade em algum dos sockets na fila
-            mysocket_status status = queue.wait_read(1000); // Timeout de 1 segundo
+            resultado = fila.wait_read(SUP_TIMEOUT * 100);
 
-            // Verifica se o tempo limite foi atingido sem atividade em nenhum socket
-            if (status == mysocket_status::SOCK_TIMEOUT)
+            switch (resultado)
             {
-                continue;
-            }
-            // Verifica se ocorreu um erro na fila de sockets e encerra o servidor em caso positivo
-            else if (status == mysocket_status::SOCK_ERROR)
-            {
-                throw "erro na fila de sockets";
-            }
-            // Processa a atividade detectada em algum socket da fila
-            else if (status == mysocket_status::SOCK_OK)
-            {
-                // Testa se houve atividade nos sockets dos clientes
-                for (auto &U : LU)
+            case mysocket_status::SOCK_TIMEOUT:
+                break;
+            case mysocket_status::SOCK_ERROR:
+                throw "ERRO NO SELECT";
+            case mysocket_status::SOCK_OK:
+                try
                 {
-                    if (U.isConnected() && queue.had_activity(U.socket))
+                    for (iterUser = LU.begin(); iterUser != LU.end(); ++iterUser)
                     {
-                        // Tenta ler um comando do socket do cliente e desconecta o cliente em caso de erro
-                        uint16_t cmd;
-                        if (U.socket.read_uint16(cmd) != mysocket_status::SOCK_OK)
+                        if (server_on && iterUser->isConnected() && fila.had_activity(iterUser->socket))
                         {
-                            std::cout << U.login << ": Desconectado (Erro na leitura do comando)" << std::endl;
-                            U.close();
-                            continue;
-                        }
+                            resultado = iterUser->socket.read_uint16(comando);
+                            if (resultado != mysocket_status::SOCK_OK)
+                                throw "ERRO";
 
-                        // Processa o comando recebido
-                        switch (cmd)
-                        {
-                        case CMD_GET_DATA:
-                        {
-                            // Envia o estado dos tanques para o cliente
-                            U.socket.write_uint16(CMD_DATA);
-                            SupState estadoTanque;
-                            readStateFromSensors(estadoTanque);
-                            U.socket.write_bytes((uint8_t *)&estadoTanque, sizeof(estadoTanque));
-                            U.socket.write_uint16(CMD_OK);
-                            break;
-                        }
-                        case CMD_SET_V1:
-                        {
-                            // Ajusta o estado da válvula V1 enviado pelo cliente
-                            uint16_t state;
-                            if (U.socket.read_uint16(state) != mysocket_status::SOCK_OK || !U.isAdmin)
+                            switch (comando)
                             {
-                                U.socket.write_uint16(CMD_ERROR);
+                            case CMD_GET_DATA:
+                                iterUser->socket.write_uint16(CMD_DATA);
+                                readStateFromSensors(estadoTanque);
+                                iterUser->socket.write_bytes((uint8_t *)&estadoTanque, sizeof(estadoTanque));
                                 break;
+
+                            case CMD_SET_V1:
+                                iterUser->socket.write_uint16(CMD_SET_V1);
+                                resultado = iterUser->socket.read_uint16(Open, 1000 * SUP_TIMEOUT);
+                                if (resultado == mysocket_status::SOCK_OK && iterUser->isAdmin)
+                                {
+                                    setV1Open(Open != 0);
+                                    iterUser->socket.write_uint16(CMD_OK);
+                                }
+                                else
+                                {
+                                    iterUser->socket.write_uint16(CMD_ERROR);
+                                    throw "PERMISSAO NEGADA";
+                                }
+                                break;
+
+                            case CMD_SET_V2:
+                                iterUser->socket.write_uint16(CMD_SET_V2);
+                                resultado = iterUser->socket.read_uint16(Open, 1000 * SUP_TIMEOUT);
+                                if (resultado == mysocket_status::SOCK_OK && iterUser->isAdmin)
+                                {
+                                    setV2Open(Open != 0);
+                                    iterUser->socket.write_uint16(CMD_OK);
+                                }
+                                else
+                                {
+                                    iterUser->socket.write_uint16(CMD_ERROR);
+                                    throw "PERMISSAO NEGADA";
+                                }
+                                break;
+
+                            case CMD_SET_PUMP:
+                                resultado = iterUser->socket.read_uint16(Input, 1000 * SUP_TIMEOUT);
+                                if (resultado != mysocket_status::SOCK_OK)
+                                    throw "ERRO";
+                                setPumpInput(Input);
+                                iterUser->socket.write_uint16(CMD_OK);
+                                break;
+
+                            case CMD_LOGOUT:
+                                cout << "USUARIO: " << iterUser->login << " SE DESCONECTOU " << endl;
+                                iterUser->close();
+                                break;
+
+                            default:
+                                throw "COMANDO INVALIDO";
                             }
-                            setV1Open(state != 0);
-                            U.socket.write_uint16(CMD_OK);
-                            break;
-                        }
-                        case CMD_LOGOUT:
-                        {
-                            // Processa o comando de logout do cliente
-                            std::cout << U.login << ": Logout realizado" << std::endl;
-                            U.close();
-                            break;
-                        }
-                        default:
-                        {
-                            // Comando inválido enviado pelo cliente
-                            U.socket.write_uint16(CMD_ERROR);
-                            std::cout << U.login << ": Enviou comando inválido" << std::endl;
-                            break;
-                        }
                         }
                     }
                 }
-
-                // Verifica se houve atividade no socket principal do servidor para aceitar novas conexões
-                if (queue.had_activity(socket_server))
+                catch (const char *err)
                 {
-                    tcp_mysocket temp_socket;
-                    if (socket_server.accept(temp_socket) == mysocket_status::SOCK_OK)
+                    cerr << "Erro do usuario: " << err << endl;
+                    iterUser->close();
+                }
+
+                if (server_on && fila.had_activity(socket_server))
+                {
+                    resultado = socket_server.accept(socket_temp);
+                    if (resultado != mysocket_status::SOCK_OK)
+                        throw "ERRO AO ACEITAR CONEXAO";
+
+                    try
                     {
-                        // Processa uma nova conexão de cliente
-                        uint16_t loginCmd;
-                        std::string login, password;
+                        resultado = socket_temp.read_uint16(comando, SUP_TIMEOUT * 1000);
+                        if (resultado != mysocket_status::SOCK_OK || comando != CMD_LOGIN)
+                            throw "ERRO DE LOGIN";
 
-                        // Lê os dados de login e senha do cliente
-                        if (temp_socket.read_uint16(loginCmd) != mysocket_status::SOCK_OK ||
-                                temp_socket.read_string(login) != mysocket_status::SOCK_OK ||
-                                temp_socket.read_string(password) != mysocket_status::SOCK_OK)
-                        {
-                            temp_socket.close();
-                            std::cout << "Erro ao receber dados de login e senha do cliente" << std::endl;
-                            continue;
-                        }
+                        resultado = socket_temp.read_string(login, SUP_TIMEOUT * 1000);
+                        if (resultado != mysocket_status::SOCK_OK)
+                            throw "ERRO LOGIN";
+                        resultado = socket_temp.read_string(password, SUP_TIMEOUT * 1000);
+                        if (resultado != mysocket_status::SOCK_OK)
+                            throw "ERRO SENHA";
 
-                        // Verifica se o comando de login é válido
-                        if (loginCmd != CMD_LOGIN)
-                        {
-                            temp_socket.write_uint16(CMD_ERROR);
-                            temp_socket.close();
-                            std::cout << "Comando inválido recebido do cliente: " << loginCmd << std::endl;
-                            continue;
-                        }
+                        if (login.size() < 6 || login.size() > 12 || password.size() < 6 || password.size() > 12)
+                            throw "LOGIN INVALIDO";
 
-                        // Procura pelo login do cliente na lista de usuários para autenticação
-                        auto itr = std::find(LU.begin(), LU.end(), login);
-                        if (itr != LU.end() && itr->password == password)
-                        {
-                            itr->socket = std::move(temp_socket);
-                            std::cout << login << ": Conectado com sucesso" << std::endl;
+                        iterUser = find(LU.begin(), LU.end(), login);
+                        if (iterUser == LU.end())
+                            throw "USUARIO NAO EXISTE";
+                        if (iterUser->password != password)
+                            throw "SENHA INCORRETA";
+                        if (iterUser->isConnected())
+                            throw "USUARIO JA CONECTADO";
 
-                            // Envia uma resposta de sucesso ao cliente
-                            uint16_t response = itr->isAdmin ? CMD_ADMIN_OK : CMD_OK;
-                            itr->socket.write_uint16(response);
-                        }
-                        else
-                        {
-                            // Envia uma resposta de erro ao cliente em caso de falha no login
-                            temp_socket.write_uint16(CMD_ERROR);
-                            temp_socket.close();
-                            std::cout << login << ": Falha no login. Usuário ou senha incorretos" << std::endl;
-                        }
+                        iterUser->socket.swap(socket_temp);
+                        iterUser->socket.write_uint16(iterUser->isAdmin ? CMD_ADMIN_OK : CMD_OK);
+
+                        cout << "USUARIO: " << iterUser->login << " SE CONECTOU COM SUCESSO " << endl;
+                    }
+                    catch (const char *err)
+                    {
+                        cerr << "Erro na conexao com o usuario: " << err << endl;
+                        socket_temp.close();
                     }
                 }
+                break;
             }
         }
         catch (const char *err)
         {
-            // Trata erros graves que encerram o servidor
             cerr << "Erro no servidor: " << err << endl;
-
-            // Define o servidor como desligado
             server_on = false;
-
-            // Fecha as conexões com todos os clientes
             for (auto &U : LU)
-            {
-                cout << "Fechando conexão do usuário: " << U.login << endl;
                 U.close();
-            }
-
-            // Fecha o socket principal do servidor
             socket_server.close();
         }
     }
+    cout << "SERVIDOR ENCERRADO" << endl;
 }
-
